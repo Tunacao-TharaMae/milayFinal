@@ -1,8 +1,8 @@
 import { useState, useEffect, type FormEvent } from "react";
 import "./App.css";
 
-const API_URL = "https://milay-final2.vercel.app/api/tasks"; // all tasks
-const API_ID_URL = (id: number) => `https://milay-final2.vercel.app/api/${id}`; // single task
+const API_URL = "https://milay-final2.vercel.app/api/tasks";
+const API_ID_URL = (id: number) => `https://milay-final2.vercel.app/api/${id}`;
 
 interface Task {
   id: number;
@@ -133,6 +133,10 @@ function App() {
                   {task.is_completed ? "✅" : "⬜"}
                 </span>
                 <span className="task-text">{task.description}</span>
+                <span className="task-date">
+                  {/* Display created_at in readable format */}
+                  {new Date(task.created_at).toLocaleString()}
+                </span>
                 <div className="button-group">
                   <button onClick={() => editTask(task)} className="button-edit">
                     Edit
