@@ -4,12 +4,19 @@ import mysql from "mysql2/promise";
 
 const app = express();
 
-// CORS
-app.use(cors({ origin: "*" }));
+// ===============================
+// ✅ CORS SETUP
+// ===============================
+// Allow only your Vercel frontend to access the API
+app.use(cors({
+  origin: "https://milay-final.vercel.app"  // replace with "*" for testing
+}));
+
+// Enable JSON parsing
 app.use(express.json());
 
 // ===============================
-// ✅ DB CONNECTION
+// ✅ DATABASE CONNECTION
 // ===============================
 const db = mysql.createPool({
   host: process.env.MYSQLHOST || "mysql.railway.internal",
@@ -20,7 +27,7 @@ const db = mysql.createPool({
 });
 
 // ===============================
-// ✅ INIT DB TABLE
+// ✅ INITIALIZE TABLE
 // ===============================
 async function initDB() {
   try {
@@ -68,7 +75,7 @@ app.get("/api/tasks", async (_req, res) => {
   }
 });
 
-// CREATE task
+// CREATE a task
 app.post("/api/tasks", async (req, res) => {
   const { description, is_completed } = req.body;
   try {
@@ -88,7 +95,7 @@ app.post("/api/tasks", async (req, res) => {
   }
 });
 
-// UPDATE task
+// UPDATE a task
 app.put("/api/tasks/:id", async (req, res) => {
   const { id } = req.params;
   const { description, is_completed } = req.body;
@@ -99,10 +106,7 @@ app.put("/api/tasks/:id", async (req, res) => {
       [description, is_completed, id]
     );
 
-    const [rows]: any = await db.query("SELECT * FROM tasks WHERE id = ?", [
-      id,
-    ]);
-
+    const [rows]: any = await db.query("SELECT * FROM tasks WHERE id = ?", [id]);
     res.json(rows[0]);
   } catch (error) {
     console.error("PUT /api/tasks error:", error);
@@ -110,7 +114,7 @@ app.put("/api/tasks/:id", async (req, res) => {
   }
 });
 
-// DELETE task
+// DELETE a task
 app.delete("/api/tasks/:id", async (req, res) => {
   const { id } = req.params;
 
