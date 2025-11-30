@@ -132,11 +132,12 @@ function App() {
                 >
                   {task.is_completed ? "✅" : "⬜"}
                 </span>
-                <span className="task-text">{task.description}</span>
-                <span className="task-date">
-                  {/* Display created_at in readable format */}
-                  {new Date(task.created_at).toLocaleString()}
-                </span>
+                <div className="task-content">
+                  <span className="task-text">{task.description}</span>
+                  <span className="task-date">
+                    {new Date(task.created_at).toLocaleString()}
+                  </span>
+                </div>
                 <div className="button-group">
                   <button onClick={() => editTask(task)} className="button-edit">
                     Edit
