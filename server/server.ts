@@ -9,8 +9,11 @@ const app = express();
 // ===============================
 // Allow only your Vercel frontend to access the API
 app.use(cors({
-  origin: "https://milay-final.vercel.app"  // replace with "*" for testing
+  origin: "https://milay-final.vercel.app",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
 }));
+
 
 // Enable JSON parsing
 app.use(express.json());
