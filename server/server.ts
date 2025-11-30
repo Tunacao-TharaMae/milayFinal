@@ -4,18 +4,24 @@ import mysql from "mysql2/promise";
 
 const app = express();
 
-// CORS: allow all origins (can restrict later)
+// CORS
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
 // ===============================
 // ✅ DB CONNECTION
 // ===============================
-const db = mysql.createPool(
-  process.env.MYSQL_URL || "mysql://root:password@localhost:3306/railway"
-);
+const db = mysql.createPool({
+  host: process.env.MYSQLHOST || "mysql.railway.internal",
+  user: process.env.MYSQLUSER || "root",
+  password: process.env.MYSQLPASSWORD || "password",
+  database: process.env.MYSQLDATABASE || "railway",
+  port: Number(process.env.MYSQLPORT) || 3306,
+});
 
-// Auto-create tasks table if it doesn't exist
+// ===============================
+// ✅ INIT DB TABLE
+// ===============================
 async function initDB() {
   try {
     await db.query(`
@@ -32,7 +38,6 @@ async function initDB() {
   }
 }
 
-// Initialize DB
 initDB();
 
 // ===============================
@@ -66,13 +71,11 @@ app.get("/api/tasks", async (_req, res) => {
 // CREATE task
 app.post("/api/tasks", async (req, res) => {
   const { description, is_completed } = req.body;
-
   try {
     const [result]: any = await db.query(
       "INSERT INTO tasks (description, is_completed, created_at) VALUES (?, ?, NOW())",
       [description, is_completed]
     );
-
     res.json({
       id: result.insertId,
       description,
@@ -121,7 +124,7 @@ app.delete("/api/tasks/:id", async (req, res) => {
 });
 
 // ===============================
-// START SERVER
+// ✅ START SERVER
 // ===============================
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
