@@ -1,7 +1,8 @@
 import { useState, useEffect, type FormEvent } from "react";
 import "./App.css";
 
-const API_URL = "https://milayfinal-production.up.railway.app/api/tasks";
+// Use your Vercel URL here
+const API_URL = "https://milay-final.vercel.app/api/tasks";
 
 interface Task {
   id: number;
@@ -20,9 +21,13 @@ function App() {
   }, []);
 
   const fetchTasks = async () => {
-    const res = await fetch(API_URL);
-    const data = await res.json();
-    setTasks(data);
+    try {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      setTasks(data);
+    } catch (err) {
+      console.error("Failed to fetch tasks:", err);
+    }
   };
 
   const resetForm = () => {
@@ -34,54 +39,59 @@ function App() {
     e.preventDefault();
     if (!newTask.trim()) return;
 
-    if (editingTask) {
-      const res = await fetch(`${API_URL}/${editingTask.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          description: newTask,
-          is_completed: editingTask.is_completed,
-        }),
-      });
-
-      const updated = await res.json();
-      setTasks(tasks.map(t => (t.id === updated.id ? updated : t)));
-    } else {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          description: newTask,
-          is_completed: false,
-        }),
-      });
-
-      const newT = await res.json();
-      setTasks([...tasks, newT]);
+    try {
+      if (editingTask) {
+        const res = await fetch(`${API_URL}/${editingTask.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            description: newTask,
+            is_completed: editingTask.is_completed,
+          }),
+        });
+        const updated = await res.json();
+        setTasks(tasks.map(t => (t.id === updated.id ? updated : t)));
+      } else {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ description: newTask, is_completed: false }),
+        });
+        const newT = await res.json();
+        setTasks([...tasks, newT]);
+      }
+    } catch (err) {
+      console.error("Failed to save task:", err);
     }
 
     resetForm();
   };
 
   const toggleCompleted = async (task: Task) => {
-    const res = await fetch(`${API_URL}/${task.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        description: task.description,
-        is_completed: !task.is_completed,
-      }),
-    });
-
-    const updated = await res.json();
-    setTasks(tasks.map(t => (t.id === updated.id ? updated : t)));
+    try {
+      const res = await fetch(`${API_URL}/${task.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: task.description,
+          is_completed: !task.is_completed,
+        }),
+      });
+      const updated = await res.json();
+      setTasks(tasks.map(t => (t.id === updated.id ? updated : t)));
+    } catch (err) {
+      console.error("Failed to toggle task:", err);
+    }
   };
 
   const deleteTask = async (id: number) => {
     if (!confirm("Delete task?")) return;
-
-    await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-    setTasks(tasks.filter(t => t.id !== id));
+    try {
+      await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+      setTasks(tasks.filter(t => t.id !== id));
+    } catch (err) {
+      console.error("Failed to delete task:", err);
+    }
   };
 
   const editTask = (task: Task) => {
@@ -101,9 +111,7 @@ function App() {
             onChange={(e) => setNewTask(e.target.value)}
             placeholder="Enter task"
           />
-          <button type="submit">
-            {editingTask ? "Update" : "Add"} Task
-          </button>
+          <button type="submit">{editingTask ? "Update" : "Add"} Task</button>
         </form>
 
         <ul>
@@ -115,9 +123,7 @@ function App() {
                 <span onClick={() => toggleCompleted(task)} className="task-checkmark">
                   {task.is_completed ? "✅" : "⬜"}
                 </span>
-
                 <span className="task-text">{task.description}</span>
-
                 <div className="button-group">
                   <button onClick={() => editTask(task)} className="button-edit">
                     Edit
