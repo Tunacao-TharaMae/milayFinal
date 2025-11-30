@@ -24,9 +24,18 @@ function App() {
     try {
       const res = await fetch(API_URL);
       const data = await res.json();
+
+      // Safety: Ensure data is an array
+      if (!Array.isArray(data)) {
+        console.error("API returned non-array:", data);
+        setTasks([]);
+        return;
+      }
+
       setTasks(data);
     } catch (err) {
       console.error("Failed to fetch tasks:", err);
+      setTasks([]);
     }
   };
 
@@ -120,15 +129,24 @@ function App() {
           ) : (
             tasks.map((task) => (
               <li key={task.id} className={task.is_completed ? "completed" : ""}>
-                <span onClick={() => toggleCompleted(task)} className="task-checkmark">
+                <span
+                  onClick={() => toggleCompleted(task)}
+                  className="task-checkmark"
+                >
                   {task.is_completed ? "✅" : "⬜"}
                 </span>
                 <span className="task-text">{task.description}</span>
                 <div className="button-group">
-                  <button onClick={() => editTask(task)} className="button-edit">
+                  <button
+                    onClick={() => editTask(task)}
+                    className="button-edit"
+                  >
                     Edit
                   </button>
-                  <button onClick={() => deleteTask(task.id)} className="button-delete">
+                  <button
+                    onClick={() => deleteTask(task.id)}
+                    className="button-delete"
+                  >
                     Delete
                   </button>
                 </div>

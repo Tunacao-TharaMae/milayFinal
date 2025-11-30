@@ -1,5 +1,4 @@
-// api/tasks.ts
-import mysql from 'mysql2/promise';
+import mysql from "mysql2/promise";
 
 // DB pool
 const db = mysql.createPool({
@@ -10,7 +9,7 @@ const db = mysql.createPool({
   port: Number(process.env.MYSQLPORT) || 3306,
 });
 
-// Ensure table exists (run once at first request)
+// Ensure table exists
 async function ensureTable() {
   await db.query(`
     CREATE TABLE IF NOT EXISTS tasks (
@@ -23,27 +22,27 @@ async function ensureTable() {
 }
 
 export default async function handler(req: any, res: any) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method === "OPTIONS") return res.status(200).end();
 
   try {
-    await ensureTable(); // Make sure table exists
+    await ensureTable();
 
-    if (req.method === 'GET') {
-      const [rows] = await db.query('SELECT * FROM tasks ORDER BY id DESC');
+    if (req.method === "GET") {
+      const [rows] = await db.query("SELECT * FROM tasks ORDER BY id DESC");
       return res.status(200).json(rows);
     }
 
-    if (req.method === 'POST') {
+    if (req.method === "POST") {
       const { description, is_completed } = req.body;
-      if (!description) return res.status(400).json({ message: 'Description required' });
+      if (!description)
+        return res.status(400).json({ message: "Description required" });
 
       const [result]: any = await db.query(
-        'INSERT INTO tasks (description, is_completed, created_at) VALUES (?, ?, NOW())',
+        "INSERT INTO tasks (description, is_completed, created_at) VALUES (?, ?, NOW())",
         [description, is_completed || false]
       );
 
@@ -55,9 +54,11 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    return res.status(405).json({ message: 'Method not allowed' });
+    return res.status(405).json({ message: "Method not allowed" });
   } catch (err: any) {
-    console.error('API error:', err);
-    return res.status(500).json({ message: 'Server error', error: err.message });
+    console.error("API /tasks error:", err.message);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
   }
 }
