@@ -131,12 +131,6 @@ function App() {
           )}
         </ul>
       </div>
-
-      <img
-        src="/anime-figure.jpg"
-        alt="Anime Figure"
-        className="anime-background-figure"
-      />
     </div>
   );
 }
