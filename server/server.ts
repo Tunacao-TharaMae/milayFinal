@@ -7,12 +7,10 @@ app.use(cors());
 app.use(express.json());
 
 // DB Connection
-const db = mysql.createPool({
-  host: process.env.MYSQLHOST,
-  user: process.env.MYSQLUSER,
-  password: process.env.MYSQLPASSWORD,
-  database: process.env.MYSQLDATABASE,
-});
+const db = mysql.createPool(
+  process.env.MYSQL_URL || "mysql://root:password@localhost:3306/railway"
+);
+
 
 // ===============================
 // ✅ CRUD API FOR TASKS
