@@ -4,19 +4,40 @@ import mysql from "mysql2/promise";
 
 const app = express();
 
-// CORS: allow all origins for testing (can restrict later)
+// CORS: allow all origins (can restrict later)
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 
-// DB Connection using Railway MYSQL_URL
+// ===============================
+// ✅ DB CONNECTION
+// ===============================
 const db = mysql.createPool(
   process.env.MYSQL_URL || "mysql://root:password@localhost:3306/railway"
 );
 
+// Auto-create tasks table if it doesn't exist
+async function initDB() {
+  try {
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS tasks (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        description VARCHAR(255) NOT NULL,
+        is_completed BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log("✅ tasks table ready");
+  } catch (err) {
+    console.error("❌ Failed to initialize tasks table:", err);
+  }
+}
+
+// Initialize DB
+initDB();
+
 // ===============================
 // ✅ TEST DATABASE CONNECTION
 // ===============================
-// ✅ TEST DATABASE CONNECTION
 app.get("/api/test-db", async (_req, res) => {
   try {
     const [tables] = await db.query("SHOW TABLES");
@@ -26,8 +47,6 @@ app.get("/api/test-db", async (_req, res) => {
     res.status(500).json({ connected: false, error: (err as Error).message });
   }
 });
-
-
 
 // ===============================
 // ✅ CRUD API FOR TASKS
