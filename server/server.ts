@@ -19,13 +19,14 @@ const db = mysql.createPool(
 // ✅ TEST DATABASE CONNECTION
 app.get("/api/test-db", async (_req, res) => {
   try {
-    const [rows] = await db.query("SELECT DATABASE() AS db_name") as [ { db_name: string }[], any ];
-    res.json({ connected: true, database: rows[0].db_name });
+    const [tables] = await db.query("SHOW TABLES");
+    res.json({ connected: true, tables });
   } catch (err) {
     console.error("DB test error:", err);
     res.status(500).json({ connected: false, error: (err as Error).message });
   }
 });
+
 
 
 // ===============================
