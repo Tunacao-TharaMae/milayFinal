@@ -1,6 +1,7 @@
+// api/tasks.ts
 import mysql from 'mysql2/promise';
 
-// Create DB connection pool
+// DB pool
 const db = mysql.createPool({
   host: process.env.MYSQLHOST,
   user: process.env.MYSQLUSER,
@@ -10,15 +11,12 @@ const db = mysql.createPool({
 });
 
 export default async function handler(req: any, res: any) {
-  // ✅ Set CORS headers for all requests
-  res.setHeader('Access-Control-Allow-Origin', '*'); // allow any frontend
+  // CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // ✅ Handle preflight request
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
     if (req.method === 'GET') {
