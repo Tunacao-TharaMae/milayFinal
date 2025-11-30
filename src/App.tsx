@@ -1,50 +1,153 @@
-import mysql from "mysql2/promise";
+import { useState, useEffect, type FormEvent } from "react";
+import "./App.css";
 
-const db = mysql.createPool({
-  host: process.env.MYSQLHOST,
-  user: process.env.MYSQLUSER,
-  password: process.env.MYSQLPASSWORD,
-  database: process.env.MYSQLDATABASE,
-  port: Number(process.env.MYSQLPORT) || 3306,
-});
+const API_URL = "https://milay-final2.vercel.app/api/tasks"; // all tasks
+const API_ID_URL = (id: number) => `https://milay-final2.vercel.app/api/${id}`; // single task
 
-export default async function handler(req: any, res: any) {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  if (req.method === "OPTIONS") return res.status(200).end();
-
-  const { id } = req.query;
-  if (!id) return res.status(400).json({ message: "ID is required" });
-
-  try {
-    if (req.method === "GET") {
-      const [rows]: any = await db.query("SELECT * FROM tasks WHERE id = ?", [id]);
-      if (rows.length === 0) return res.status(404).json({ message: "Task not found" });
-      return res.status(200).json(rows[0]);
-    }
-
-    if (req.method === "PUT") {
-      const { description, is_completed } = req.body;
-      if (!description) return res.status(400).json({ message: "Description required" });
-
-      await db.query(
-        "UPDATE tasks SET description = ?, is_completed = ? WHERE id = ?",
-        [description, is_completed ? 1 : 0, id]
-      );
-
-      const [rows]: any = await db.query("SELECT * FROM tasks WHERE id = ?", [id]);
-      return res.status(200).json(rows[0]);
-    }
-
-    if (req.method === "DELETE") {
-      await db.query("DELETE FROM tasks WHERE id = ?", [id]);
-      return res.status(200).json({ success: true, message: "Task deleted" });
-    }
-
-    return res.status(405).json({ message: "Method not allowed" });
-  } catch (err: any) {
-    console.error("API /[id] error:", err.message);
-    return res.status(500).json({ message: "Server error", error: err.message });
-  }
+interface Task {
+  id: number;
+  description: string;
+  is_completed: boolean;
+  created_at: string;
 }
+
+function App() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [newTask, setNewTask] = useState("");
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const fetchTasks = async () => {
+    try {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      if (!Array.isArray(data)) {
+        console.error("API returned non-array:", data);
+        setTasks([]);
+        return;
+      }
+      setTasks(data);
+    } catch (err) {
+      console.error("Failed to fetch tasks:", err);
+      setTasks([]);
+    }
+  };
+
+  const resetForm = () => {
+    setNewTask("");
+    setEditingTask(null);
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!newTask.trim()) return;
+
+    try {
+      if (editingTask) {
+        const res = await fetch(API_ID_URL(editingTask.id), {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            description: newTask,
+            is_completed: editingTask.is_completed,
+          }),
+        });
+        const updated = await res.json();
+        setTasks(tasks.map(t => (t.id === updated.id ? updated : t)));
+      } else {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ description: newTask, is_completed: false }),
+        });
+        const newT = await res.json();
+        setTasks([newT, ...tasks]);
+      }
+    } catch (err) {
+      console.error("Failed to save task:", err);
+    }
+
+    resetForm();
+  };
+
+  const toggleCompleted = async (task: Task) => {
+    try {
+      const res = await fetch(API_ID_URL(task.id), {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: task.description,
+          is_completed: !task.is_completed,
+        }),
+      });
+      const updated = await res.json();
+      setTasks(tasks.map(t => (t.id === updated.id ? updated : t)));
+    } catch (err) {
+      console.error("Failed to toggle task:", err);
+    }
+  };
+
+  const deleteTask = async (id: number) => {
+    if (!confirm("Delete task?")) return;
+    try {
+      await fetch(API_ID_URL(id), { method: "DELETE" });
+      setTasks(tasks.filter(t => t.id !== id));
+    } catch (err) {
+      console.error("Failed to delete task:", err);
+    }
+  };
+
+  const editTask = (task: Task) => {
+    setEditingTask(task);
+    setNewTask(task.description);
+  };
+
+  return (
+    <div className="container-wrapper">
+      <div className="container">
+        <h1>Task Manager</h1>
+
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            value={newTask}
+            onChange={(e) => setNewTask(e.target.value)}
+            placeholder="Enter task"
+          />
+          <button type="submit">{editingTask ? "Update" : "Add"} Task</button>
+        </form>
+
+        <ul>
+          {tasks.length === 0 ? (
+            <p>No tasks yet.</p>
+          ) : (
+            tasks.map((task) => (
+              <li key={task.id} className={task.is_completed ? "completed" : ""}>
+                <span
+                  onClick={() => toggleCompleted(task)}
+                  className="task-checkmark"
+                >
+                  {task.is_completed ? "✅" : "⬜"}
+                </span>
+                <span className="task-text">{task.description}</span>
+                <div className="button-group">
+                  <button onClick={() => editTask(task)} className="button-edit">
+                    Edit
+                  </button>
+                  <button onClick={() => deleteTask(task.id)} className="button-delete">
+                    Delete
+                  </button>
+                </div>
+              </li>
+            ))
+          )}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+export default App;
