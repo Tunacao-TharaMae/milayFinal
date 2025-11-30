@@ -1,7 +1,7 @@
 import { useState, useEffect, type FormEvent } from "react";
 import "./App.css";
 
-// Use your Vercel URL here
+// Your deployed API URL
 const API_URL = "https://milay-final2.vercel.app/api/tasks";
 
 interface Task {
@@ -24,14 +24,11 @@ function App() {
     try {
       const res = await fetch(API_URL);
       const data = await res.json();
-
-      // Safety: Ensure data is an array
       if (!Array.isArray(data)) {
         console.error("API returned non-array:", data);
         setTasks([]);
         return;
       }
-
       setTasks(data);
     } catch (err) {
       console.error("Failed to fetch tasks:", err);
@@ -77,8 +74,13 @@ function App() {
   };
 
   const toggleCompleted = async (task: Task) => {
+    // Optimistic update
+    setTasks(tasks.map(t =>
+      t.id === task.id ? { ...t, is_completed: !t.is_completed } : t
+    ));
+
     try {
-      const res = await fetch(`${API_URL}/${task.id}`, {
+      await fetch(`${API_URL}/${task.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -86,10 +88,12 @@ function App() {
           is_completed: !task.is_completed,
         }),
       });
-      const updated = await res.json();
-      setTasks(tasks.map(t => (t.id === updated.id ? updated : t)));
     } catch (err) {
       console.error("Failed to toggle task:", err);
+      // Revert if failed
+      setTasks(tasks.map(t =>
+        t.id === task.id ? { ...t, is_completed: task.is_completed } : t
+      ));
     }
   };
 
@@ -137,16 +141,10 @@ function App() {
                 </span>
                 <span className="task-text">{task.description}</span>
                 <div className="button-group">
-                  <button
-                    onClick={() => editTask(task)}
-                    className="button-edit"
-                  >
+                  <button onClick={() => editTask(task)} className="button-edit">
                     Edit
                   </button>
-                  <button
-                    onClick={() => deleteTask(task.id)}
-                    className="button-delete"
-                  >
+                  <button onClick={() => deleteTask(task.id)} className="button-delete">
                     Delete
                   </button>
                 </div>

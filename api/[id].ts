@@ -12,7 +12,6 @@ export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
   if (req.method === "OPTIONS") return res.status(200).end();
 
   const { id } = req.query;
@@ -31,7 +30,7 @@ export default async function handler(req: any, res: any) {
 
       await db.query(
         "UPDATE tasks SET description = ?, is_completed = ? WHERE id = ?",
-        [description, is_completed, id]
+        [description, is_completed ? 1 : 0, id]
       );
 
       const [rows]: any = await db.query("SELECT * FROM tasks WHERE id = ?", [id]);
