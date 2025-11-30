@@ -9,8 +9,9 @@ const app = express();
 // ===============================
 // Allow only your Vercel frontend to access the API
 app.use(cors({
-  origin: "https://milay-final.vercel.app",
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  origin: "https://milay-final.vercel.app", // only your frontend
+  methods: ["GET","POST","PUT","DELETE"],
+  allowedHeaders: ["Content-Type"],
   credentials: true
 }));
 
