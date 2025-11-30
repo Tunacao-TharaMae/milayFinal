@@ -3,13 +3,29 @@ import cors from "cors";
 import mysql from "mysql2/promise";
 
 const app = express();
-app.use(cors());
+
+// CORS: allow all origins for testing (can restrict later)
+app.use(cors({ origin: "*" }));
 app.use(express.json());
 
-// DB Connection
+// DB Connection using Railway MYSQL_URL
 const db = mysql.createPool(
   process.env.MYSQL_URL || "mysql://root:password@localhost:3306/railway"
 );
+
+// ===============================
+// ✅ TEST DATABASE CONNECTION
+// ===============================
+// ✅ TEST DATABASE CONNECTION
+app.get("/api/test-db", async (_req, res) => {
+  try {
+    const [rows] = await db.query("SELECT DATABASE() AS db_name") as [ { db_name: string }[], any ];
+    res.json({ connected: true, database: rows[0].db_name });
+  } catch (err) {
+    console.error("DB test error:", err);
+    res.status(500).json({ connected: false, error: (err as Error).message });
+  }
+});
 
 
 // ===============================
@@ -72,8 +88,8 @@ app.put("/api/tasks/:id", async (req, res) => {
 });
 
 // DELETE task
-app.delete("/api/tasks/:id", async (_req, res) => {
-  const { id } = _req.params;
+app.delete("/api/tasks/:id", async (req, res) => {
+  const { id } = req.params;
 
   try {
     await db.query("DELETE FROM tasks WHERE id = ?", [id]);
