@@ -1,7 +1,7 @@
 import { useState, useEffect, type FormEvent } from "react";
 import "./App.css";
 
-const API_URL = "http://localhost:4000/api/tasks"; // Backend URL
+const API_URL = "https://milayfinal-production.up.railway.app/api/tasks";
 
 interface Task {
   id: number;
