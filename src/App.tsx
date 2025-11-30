@@ -2,7 +2,7 @@ import { useState, useEffect, type FormEvent } from "react";
 import "./App.css";
 
 // Use your Vercel URL here
-const API_URL = "https://milay-final.vercel.app/api/tasks";
+const API_URL = "https://milay-final2.vercel.app/api/tasks";
 
 interface Task {
   id: number;
