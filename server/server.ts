@@ -14,13 +14,12 @@ const db = mysql.createPool({
   database: process.env.MYSQLDATABASE,
 });
 
-
 // ===============================
 // ✅ CRUD API FOR TASKS
 // ===============================
 
 // GET all tasks
-app.get("/api/tasks", async (req, res) => {
+app.get("/api/tasks", async (_req, res) => {
   try {
     const [rows] = await db.query("SELECT * FROM tasks ORDER BY id DESC");
     res.json(rows);
@@ -75,8 +74,8 @@ app.put("/api/tasks/:id", async (req, res) => {
 });
 
 // DELETE task
-app.delete("/api/tasks/:id", async (req, res) => {
-  const { id } = req.params;
+app.delete("/api/tasks/:id", async (_req, res) => {
+  const { id } = _req.params;
 
   try {
     await db.query("DELETE FROM tasks WHERE id = ?", [id]);
@@ -92,4 +91,3 @@ app.delete("/api/tasks/:id", async (req, res) => {
 // ===============================
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
