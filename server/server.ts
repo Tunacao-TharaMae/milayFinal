@@ -8,11 +8,12 @@ app.use(express.json());
 
 // DB Connection
 const db = mysql.createPool({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "crud_db", // your DB
+  host: process.env.MYSQLHOST,
+  user: process.env.MYSQLUSER,
+  password: process.env.MYSQLPASSWORD,
+  database: process.env.MYSQLDATABASE,
 });
+
 
 // ===============================
 // ✅ CRUD API FOR TASKS
@@ -89,6 +90,6 @@ app.delete("/api/tasks/:id", async (req, res) => {
 // ===============================
 // START SERVER
 // ===============================
-app.listen(4000, () =>
-  console.log("Server running on http://localhost:4000")
-);
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
